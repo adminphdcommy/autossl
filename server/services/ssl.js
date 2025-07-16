@@ -53,7 +53,7 @@ async function getSslForDomain(domain) {
                 console.log("newCertInfo", newCertInfo)
                 dtexpired = new Date(newCertInfo.validTo).getTime()
                 dtstart = new Date(newCertInfo.validFrom).getTime()
-                await updateDomainListConfig(name)
+                // await updateDomainListConfig(name)
             } catch (error) {
                 console.log("[getSslForDomain] getCert error name:", error)
                 errorDomains.push(domain)
