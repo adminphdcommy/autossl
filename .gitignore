@@ -4,9 +4,7 @@ logs/**
 *.log
 temp
 nohup.out
-env.js
 nohup/**
-server/config/**
 server/keys/**
 nohup.out-*.gz
 tmp/**
