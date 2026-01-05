@@ -9,8 +9,12 @@ let client
 let account
 
 
-
-async function getSslForDomain(domain) {
+/**
+ * 
+ * @param {string} domain 
+ * @param {"dns|"http"} authType 
+ */
+async function getSslForDomain(domain, authType) {
     console.log("[getSslForDomain] running ")
 
     let errorDomains = []
@@ -38,7 +42,7 @@ async function getSslForDomain(domain) {
         console.log("[getSslForDomain]", domain, currentCertExpiryDate)
         if ((currentCertExpiryDate && currentCertExpiryDate < fiveDayFromNow) || !currentCertExpiryDate) {
             try {
-                let obj = await getCert(domain)
+                let obj = await getCert(domain, { authType })
 
                 console.log("[getSslForDomain] checking path", `${config.sslFolderPath}/${pathName}`)
 
@@ -112,6 +116,7 @@ async function getCertInfoFromLocalKeyPath(domain) {
  * @param {String} domainname 
  * @param {Object} options 
  * @param {String[]} options.san
+ * @param {"dns"|"http"} options.authType
  * @returns {Promise.<{"csr":String,"key":String,"cert":String}>}
  */
 async function getCert(domainname, options) {
@@ -119,6 +124,7 @@ async function getCert(domainname, options) {
     let name = util.getPureDomainName(domainname)
     try {
 
+        let authType
         let id = util.idGenerator()
         if (!client) {
             // console.log()
@@ -151,27 +157,58 @@ async function getCert(domainname, options) {
 
         let authorizations = await acme.getAuthorizations(client, order)
         console.log("authorizations", authorizations)
+        if (!options.authType || options.authType == 'dns') {
+            authType = "dns"
+        } else {
+            authType = 'http'
+        }
         // let authz = authorizations[0]
         for (let i = 0; i < authorizations.length; i++) {
             let authz = authorizations[i]
             let { challenges } = authz
+            let _challenge
             // console.log("challenges", challenges)
             for (let j = 0; j < challenges.length; j++) {
                 let challenge = challenges[j]
                 console.log(challenge)
-                if (challenge.type !== "dns-01") {
-                    continue
-                }
+
                 let dnsValue = await acme.getToken(client, challenge)
-                let dnsSubdomain = `_acme-challenge${name.subdomain ? "." + name.subdomain : ""}`
-                console.log(dnsSubdomain, dnsValue)
-                await util.timeout(20000)
-                await acme.verifyChallenge(client, authz, challenge)
-                await acme.completeChallenge(client, challenge)
-                await acme.waitForValidStatus(client, challenge)
+                if (challenge.type == "dns-01") {
+                    let dnsSubdomain = `_acme-challenge${name.subdomain ? "." + name.subdomain : ""}`
+                    console.log("--- ")
+                    console.log("| ")
+                    console.log("| [SSL] DNS", dnsSubdomain, dnsValue)
+                    console.log("| ")
+                    console.log("--- ")
 
+                    if (authType == 'dns') {
+                        _challenge = challenge
+                    }
 
+                } else if (challenge.type == "http-01") {
+                    console.log("--- ")
+                    console.log("| ")
+                    console.log("[SSL] HTTP", challenge.token, dnsValue)
+                    console.log("| ")
+                    console.log("--- ")
+
+                    if (authType == 'http') {
+                        _challenge = challenge
+                    }
+                } else {
+                    console.log("--- ")
+                    console.log("| ")
+                    console.log("[SSL] OTHERS", dnsValue)
+                    console.log("| ")
+                    console.log("--- ")
+
+                }
             }
+            console.log("AUTH TYPE", authType, _challenge)
+            await util.timeout(20000)
+            await acme.verifyChallenge(client, authz, _challenge)
+            await acme.completeChallenge(client, _challenge)
+            await acme.waitForValidStatus(client, _challenge)
 
         }
 

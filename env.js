@@ -1,4 +1,4 @@
-module.exports = "SIT" // Production = "PROD"
+module.exports = "PROD" // Production = "PROD"
 
 let unitPerRow = 30
 let border = "===================================================="

@@ -1,2 +1,2 @@
 exports.sslFolderPath = "./server/keys"
-exports.acmeEmailAccount = "admin@example.com"
+exports.acmeEmailAccount = "admin@phd.com.my"

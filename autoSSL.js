@@ -1,3 +1,6 @@
 let ssl = require("./server/services/ssl")
 
-ssl.getSslForDomain("jimmy.pickafoo.com")
+ssl.getSslForDomain("pickafoo.com", 'http')
+
+
+

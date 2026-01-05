@@ -51,11 +51,19 @@ let tasks = {}
 async function createClient(id) {
     try {
         console.log("[ACME] Initializing Client")
-
+        let directoryUrl
+        if (env == "PROD") {
+            directoryUrl = acme.directory.letsencrypt.production
+        } else if (env.toLowerCase() == "sectigo") {
+            directoryUrl = 'https://acme.sectigo.com/v2/DV90'
+        } else {
+            directoryUrl = acme.directory.letsencrypt.staging
+        }
         const client = new acme.Client({
-            directoryUrl: env == "PROD" ? acme.directory.letsencrypt.production : acme.directory.letsencrypt.staging,
+            directoryUrl,
             accountKey: await acme.forge.createPrivateKey()
         });
+        console.log(acme.directory.letsencrypt.production)
         return client
     } catch (error) {
         throw error
@@ -140,6 +148,7 @@ async function getAuthorizations(client, order) {
     try {
         console.log("[ACME] Retrieving Authorization")
         const authorizations = await client.getAuthorizations(order);
+
         return authorizations
     } catch (error) {
         throw error
@@ -152,11 +161,15 @@ async function getAuthorizations(client, order) {
  */
 async function getChallenge(challenges) {
     try {
+        console.group("getChallenge")
         console.log("[ACME] Retrieving Challenge")
+        console.log("challenges", challenges)
+        console.groupEnd()
         let challenge
         challenges.forEach(x => {
             if (x.type == "dns-01") {
                 challenge = x
+            } else {
             }
         })
         return challenge
